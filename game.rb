@@ -1,15 +1,21 @@
 class Game
 
     def initialize(player, board=nil)
+        row, col, default_value = 3, 3, "-"
+        if board == nil
+            @board = Array.new(row) {Array.new(col, default_value)}
+        else
+            @board = board
+        end
         @player = player
         @lastMove = nil
         @playingAs = player.PlayingAs == "x" ? "o" : "x"
         @gameFinished = false
-        row, col, default_value = 3, 3, "-"
-        if board == nil
-            @board = Array.new(row) {Array.new(col, default_value)}
-        end
     end 
+
+    def board()
+        return @board
+    end
 
     def CanPlayAt(xcoord, ycoord)
         return (@board[xcoord][ycoord] == "-")
@@ -66,7 +72,6 @@ class Game
         end
     end
 
-    #returns the current value of the board to help the minimax function
     def GetBoardValue()
         if @gameFinished
             winner = CheckWin()
@@ -143,8 +148,9 @@ class Game
         bestValue = -1
         xPosBestMove, yPosBestMove = nil
         while @gameFinished == false
-            x, y = GetEmptyMove(@board)
+            x, y = GetEmptyMove()
             @board[x][y] = @playingAs
+            @lastMove = @playingAs
             moveValue = Minimax(@board, 0, false)
             @board[x][y] = '-'
             if moveValue > bestValue
@@ -156,10 +162,10 @@ class Game
         return xPosBestMove, yPosBestMove
     end 
 
-    def GetEmptyMove(board)
+    def GetEmptyMove()
         3.times do |i|
             3.times do |j|
-                if board[i][j] == '-'
+                if @board[i][j] == '-'
                     return i, j
                 end
             end
@@ -177,15 +183,16 @@ class Game
         end
         if maximizingPlayer #AI turn
             highestValue = -1000
-            x, y = currentGame.GetEmptyMove(currentGame.board) #get the next empty move
-            currentGame.Emplace(currentGame.PlayingAs, x, y) #make the move
-            highestValue = max(highestValue, Minimax(currentGame.Board, depth + 1, false))
+            x, y = currentGame.GetEmptyMove() #get the next empty move
+            currentGame.Emplace(@playingAs, x, y) #make the move
+            highestValue = [highestValue, (Minimax(currentGame.board, depth + 1, false))].max
             currentGame.board[x][y] = '-'
         else #player turn
+            opponent = @playingAs == 'x' ? 'o' : 'x'  
             lowestValue = 1000
-            x, y = currentGame.GetEmptyMove(currentGame.board) #get the next empty move
-            currentGame.Emplace(currentGame.PlayingAs, x, y) #make the move
-            highestValue = min(highestValue, Minimax(currentGame.Board, depth + 1, true))
+            x, y = currentGame.GetEmptyMove() #get the next empty move
+            currentGame.Emplace(opponent, x, y) #make the move
+            lowestValue = [lowestValue, (Minimax(currentGame.board, depth + 1, true))].min
             currentGame.board[x][y] = '-'
         end
     end
